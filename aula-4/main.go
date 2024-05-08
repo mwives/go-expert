@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 const a = "Hello, World!"
 
 type ID int
@@ -13,5 +15,5 @@ var (
 )
 
 func main() {
-	println(f)
+	fmt.Printf("The type of f is %T", f)
 }
