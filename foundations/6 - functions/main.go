@@ -14,6 +14,10 @@ func main() {
 	} else {
 		fmt.Println(result)
 	}
+
+	total := func() int { return variadicSum(123, 243, 147, 153) }() // Anonymous function
+	fmt.Println(total)
+
 }
 
 // func sum(a, b int) int {
@@ -34,4 +38,14 @@ func buyAlcohol(age int) (string, error) {
 	}
 
 	return "You can buy alcohol", nil
+}
+
+func variadicSum(numbers ...int) int {
+	total := 0
+
+	for _, number := range numbers {
+		total += number
+	}
+
+	return total
 }
