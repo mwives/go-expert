@@ -1,0 +1,24 @@
+{{ template "header.html" }}
+
+<h1>Courses</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Course</th>
+      <th>Workload</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{ range . }}
+    <!-- Conditionals (no one likes Java) -->
+    {{ if ne .Name "Java"}}
+    <tr>
+      <td>{{ .Name }}</td>
+      <td>{{ .Workload }}</td>
+    </tr>
+    {{ end }} {{ end }}
+  </tbody>
+</table>
+
+{{ template "footer.html" }}
