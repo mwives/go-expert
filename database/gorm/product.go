@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Product struct {
@@ -43,6 +44,18 @@ func FindAllProducts(db *gorm.DB, limit int, offset int) []Product {
 
 func UpdateProduct(db *gorm.DB, product *Product) {
 	db.Save(&product)
+}
+
+func UpdateProductLock(db *gorm.DB, product *Product) {
+	tx := db.Begin()
+	var p Product
+	err := tx.Debug().Clauses(clause.Locking{Strength: "UPDATE"}).First(&p, product.ID).Error
+	if err != nil {
+		panic(err)
+	}
+	p.Name = product.Name
+	tx.Debug().Save(&p)
+	tx.Commit()
 }
 
 func DeleteProduct(db *gorm.DB, productId int) {
