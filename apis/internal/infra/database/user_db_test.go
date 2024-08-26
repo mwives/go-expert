@@ -9,17 +9,24 @@ import (
 	"gorm.io/gorm"
 )
 
-func Test_CreateUser(t *testing.T) {
+func setupUserDB(t *testing.T) *gorm.DB {
+	t.Helper()
 	db, err := gorm.Open(sqlite.Open("file::memory:"), &gorm.Config{})
-	if err != nil {
-		t.Error(err)
-	}
-	db.AutoMigrate(&entity.User{})
-	user, _ := entity.NewUser("John Doe", "j@j.com", "qwerty")
-	userDB := NewUser(db)
+	assert.NoError(t, err)
+	err = db.AutoMigrate(&entity.User{})
+	assert.NoError(t, err)
+	return db
+}
 
+func TestUser_Create(t *testing.T) {
+	t.Parallel()
+	db := setupUserDB(t)
+	user, err := entity.NewUser("John Doe", "j@j.com", "qwerty")
+	assert.NoError(t, err)
+
+	userDB := NewUser(db)
 	err = userDB.Create(user)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	var userFound entity.User
 	err = db.First(&userFound, "id = ?", user.ID).Error
@@ -30,17 +37,15 @@ func Test_CreateUser(t *testing.T) {
 	assert.NotNil(t, userFound.Password)
 }
 
-func Test_FindUserByEmail(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open("file::memory:"), &gorm.Config{})
-	if err != nil {
-		t.Error(err)
-	}
-	db.AutoMigrate(&entity.User{})
-	user, _ := entity.NewUser("John Doe", "j@j.com", "qwerty")
-	userDB := NewUser(db)
+func TestUser_FindByEmail(t *testing.T) {
+	t.Parallel()
+	db := setupUserDB(t)
+	user, err := entity.NewUser("John Doe", "j@j.com", "qwerty")
+	assert.NoError(t, err)
 
+	userDB := NewUser(db)
 	err = userDB.Create(user)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	userFound, err := userDB.FindByEmail(user.Email)
 	assert.Nil(t, err)
