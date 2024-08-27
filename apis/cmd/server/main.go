@@ -1,14 +1,19 @@
 package main
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/mwives/go-expert/apis/configs"
 	"github.com/mwives/go-expert/apis/internal/entity"
+	"github.com/mwives/go-expert/apis/internal/infra/database"
+	"github.com/mwives/go-expert/apis/internal/infra/webserver/handlers"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 func main() {
-	_, err := configs.LoadConfig(".")
+	config, err := configs.LoadConfig(".")
 	if err != nil {
 		panic(err)
 	}
@@ -17,4 +22,12 @@ func main() {
 		panic(err)
 	}
 	db.AutoMigrate(&entity.Product{}, &entity.User{})
+
+	productDB := database.NewProduct(db)
+	productHandler := handlers.NewProductHandler(productDB)
+
+	http.HandleFunc("/products", productHandler.CreateProduct)
+
+	fmt.Printf("Starting server on port %s\n", config.WebServerPort)
+	http.ListenAndServe(fmt.Sprintf(":%s", config.WebServerPort), nil)
 }
