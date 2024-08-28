@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/mwives/go-expert/apis/configs"
 	"github.com/mwives/go-expert/apis/internal/entity"
 	"github.com/mwives/go-expert/apis/internal/infra/database"
@@ -26,8 +28,10 @@ func main() {
 	productDB := database.NewProduct(db)
 	productHandler := handlers.NewProductHandler(productDB)
 
-	http.HandleFunc("/products", productHandler.CreateProduct)
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+	r.Post("/products", productHandler.CreateProduct)
 
 	fmt.Printf("Starting server on port %s\n", config.WebServerPort)
-	http.ListenAndServe(fmt.Sprintf(":%s", config.WebServerPort), nil)
+	http.ListenAndServe(fmt.Sprintf(":%s", config.WebServerPort), r)
 }
