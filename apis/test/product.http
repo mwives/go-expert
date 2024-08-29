@@ -10,6 +10,7 @@ Content-Type: application/json
 ###
 # Get Products
 GET http://localhost:8080/products?page=1&limit=10&sort=asc
+Authorization: Bearer <token>
 
 ###
 # Get Product
