@@ -29,10 +29,14 @@ func main() {
 	productDB := database.NewProduct(db)
 	productHandler := handlers.NewProductHandler(productDB)
 	userDB := database.NewUser(db)
-	userHandler := handlers.NewUserHandler(userDB, config.TokenAuth, config.JWTExpiresIn)
+	userHandler := handlers.NewUserHandler(userDB)
 
 	r := chi.NewRouter()
+	// r.Use(LogRequest) // Using log middleware (study purpose)
 	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.WithValue("jwt", config.TokenAuth))
+	r.Use(middleware.WithValue("jwtExpiresIn", config.JWTExpiresIn))
 
 	r.Route("/products", func(r chi.Router) {
 		// Add the JWTAuth middleware to the router
@@ -53,3 +57,11 @@ func main() {
 	fmt.Printf("Starting server on port %s\n", config.WebServerPort)
 	http.ListenAndServe(fmt.Sprintf(":%s", config.WebServerPort), r)
 }
+
+// Middleware function to log the request (study purpose)
+// func LogRequest(next http.Handler) http.Handler {
+// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// 		log.Printf("Request: %s %s", r.Method, r.URL.Path)
+// 		next.ServeHTTP(w, r)
+// 	})
+// }
