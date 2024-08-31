@@ -8,13 +8,28 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/jwtauth"
 	"github.com/mwives/go-expert/apis/configs"
+	_ "github.com/mwives/go-expert/apis/docs"
 	"github.com/mwives/go-expert/apis/internal/entity"
 	"github.com/mwives/go-expert/apis/internal/infra/database"
 	"github.com/mwives/go-expert/apis/internal/infra/webserver/handlers"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
+// @title Go Expert API
+// @version 1.0
+// @description Product API with authentication
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name Ives M. W.
+// @contact.email ivesmw@gmail.com
+
+// @host localhost:8080
+// @BasePath /
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
 	config, err := configs.LoadConfig(".")
 	if err != nil {
@@ -53,6 +68,8 @@ func main() {
 
 	r.Post("/users", userHandler.CreateUser)
 	r.Post("/users/auth", userHandler.GetJWT)
+
+	r.Get("/docs/*", httpSwagger.Handler(httpSwagger.URL(fmt.Sprintf("http://localhost:%s/docs/doc.json", config.WebServerPort))))
 
 	fmt.Printf("Starting server on port %s\n", config.WebServerPort)
 	http.ListenAndServe(fmt.Sprintf(":%s", config.WebServerPort), r)
