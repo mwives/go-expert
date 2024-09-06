@@ -28,17 +28,36 @@ func (ed *EventDispatcher) Register(eventName string, handler EventHandlerInterf
 }
 
 func (ed *EventDispatcher) Dispatch(event EventInterface) error {
-	panic("not implemented") // TODO: Implement
+	if handlers, ok := ed.handlers[event.GetName()]; ok {
+		for _, handler := range handlers {
+			handler.Handle(event)
+		}
+	}
+	return nil
 }
 
 func (ed *EventDispatcher) Remove(eventName string, handler EventHandlerInterface) error {
-	panic("not implemented") // TODO: Implement
+	if _, ok := ed.handlers[eventName]; ok {
+		for i, h := range ed.handlers[eventName] {
+			if h == handler {
+				ed.handlers[eventName] = append(ed.handlers[eventName][:i], ed.handlers[eventName][i+1:]...)
+			}
+		}
+	}
+	return nil
 }
 
 func (ed *EventDispatcher) Has(eventName string, handler EventHandlerInterface) bool {
-	panic("not implemented") // TODO: Implement
+	if _, ok := ed.handlers[eventName]; ok {
+		for _, h := range ed.handlers[eventName] {
+			if h == handler {
+				return true
+			}
+		}
+	}
+	return false
 }
 
-func (ed *EventDispatcher) Clear() error {
-	panic("not implemented") // TODO: Implement
+func (ed *EventDispatcher) Clear() {
+	ed.handlers = make(map[string][]EventHandlerInterface)
 }
