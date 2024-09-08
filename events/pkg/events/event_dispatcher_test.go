@@ -1,6 +1,7 @@
 package events
 
 import (
+	"sync"
 	"testing"
 	"time"
 
@@ -30,7 +31,7 @@ type TestEventHandler struct {
 }
 
 // Function to implement the EventHandler interface
-func (h *TestEventHandler) Handle(event EventInterface) {}
+func (h *TestEventHandler) Handle(event EventInterface, wg *sync.WaitGroup) {}
 
 // EventDispatcherTestSuite is the test suite structure used by testify/suite.
 type EventDispatcherTestSuite struct {
@@ -122,23 +123,30 @@ type MockHandler struct {
 }
 
 // Handle is the mocked method that will simulate handling an event.
-func (m *MockHandler) Handle(event EventInterface) {
+func (m *MockHandler) Handle(event EventInterface, wg *sync.WaitGroup) {
 	m.Called(event) // Track that this method was called with a specific event
+	wg.Done()
 }
 
 func (suite *EventDispatcherTestSuite) TestEventDispatcher_Dispatch() {
 	eh := &MockHandler{}
 	eh.On("Handle", &suite.event) // Expect that the Handle method will be called with the event
 
+	eh2 := &MockHandler{}
+	eh2.On("Handle", &suite.event) // Expect that the Handle method will be called with the event
+
 	// Register the mock handler to the event
 	suite.eventDispatcher.Register(suite.event.GetName(), eh)
+	suite.eventDispatcher.Register(suite.event.GetName(), eh2)
 	// Dispatch the event, which should trigger the Handle method on the mock handler
 	suite.eventDispatcher.Dispatch(&suite.event)
 
-	// Assert that all expectations for the mock handler were met (i.e., Handle was called)
+	// Assert that all expectations for the mock handlers were met (i.e., Handle was called)
 	eh.AssertExpectations(suite.T())
+	eh2.AssertExpectations(suite.T())
 	// Assert that the Handle method was called exactly once
 	eh.AssertNumberOfCalls(suite.T(), "Handle", 1)
+	eh2.AssertNumberOfCalls(suite.T(), "Handle", 1)
 }
 
 func (suite *EventDispatcherTestSuite) TestEventDispatcher_Remove() {
