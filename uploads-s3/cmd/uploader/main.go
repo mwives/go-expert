@@ -43,7 +43,17 @@ func main() {
 	}
 	defer dir.Close()
 
-	uploadControl := make(chan struct{}, 10)
+	uploadControl := make(chan struct{}, 100)
+	errorControl := make(chan string, 10)
+
+	go func() {
+		for filename := range errorControl {
+			uploadControl <- struct{}{} // Release the semaphore
+			wg.Add(1)
+			go uploadFile(filename, uploadControl, errorControl)
+		}
+	}()
+
 	for {
 		files, err := dir.ReadDir(1)
 		if err != nil {
@@ -55,12 +65,12 @@ func main() {
 		}
 		wg.Add(1)
 		uploadControl <- struct{}{}
-		go uploadFile(files[0].Name(), uploadControl)
+		go uploadFile(files[0].Name(), uploadControl, errorControl)
 	}
 	wg.Wait()
 }
 
-func uploadFile(filename string, uploadControl <-chan struct{}) {
+func uploadFile(filename string, uploadControl <-chan struct{}, errorControl chan<- string) {
 	defer wg.Done()
 
 	completeFileName := fmt.Sprintf("tmp/%s", filename)
@@ -68,7 +78,8 @@ func uploadFile(filename string, uploadControl <-chan struct{}) {
 	f, err := os.Open(completeFileName)
 	if err != nil {
 		fmt.Printf("Error opening file %s: %v\n", completeFileName, err)
-		<-uploadControl // Release the semaphore
+		<-uploadControl                  // Release the semaphore
+		errorControl <- completeFileName // Notify the error
 		return
 	}
 	defer f.Close()
@@ -80,7 +91,8 @@ func uploadFile(filename string, uploadControl <-chan struct{}) {
 	})
 	if err != nil {
 		fmt.Printf("Error uploading file %s: %v\n", completeFileName, err)
-		<-uploadControl // Release the semaphore
+		<-uploadControl                  // Release the semaphore
+		errorControl <- completeFileName // Notify the error
 		return
 	}
 
