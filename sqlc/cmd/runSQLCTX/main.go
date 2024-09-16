@@ -101,4 +101,16 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	queries := db.New(dbConn)
+
+	// List all courses
+	courses, err := queries.ListCourses(ctx)
+	if err != nil {
+		panic(err)
+	}
+	for _, course := range courses {
+		fmt.Printf("ID: %s, Name: %s, Description: %s, Price: %f, CategoryID: %s, CategoryName: %s\n",
+			course.ID, course.Name, course.Description.String, course.Price, course.CategoryID, course.CategoryName)
+	}
 }
