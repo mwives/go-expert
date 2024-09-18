@@ -4,7 +4,6 @@ import (
 	"database/sql"
 
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/mwives/go-expert/dependency-injection/product"
 )
 
 func main() {
@@ -13,8 +12,7 @@ func main() {
 		panic(err)
 	}
 
-	productRepository := product.NewProductRepository(db)
-	productUseCase := product.NewProductUseCase(productRepository)
+	productUseCase := NewProductUseCase(db)
 
 	product, err := productUseCase.GetProduct(1)
 	if err != nil {
